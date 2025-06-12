@@ -47,24 +47,59 @@ document.addEventListener('DOMContentLoaded', function() {
         showSection('login-section');
     });
 
+    // Password toggle functionality
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const passwordInput = this.previousElementSibling;
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            // Change the eye icon
+            this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+        });
+    });
+
     // Login form handler
-    loginForm.addEventListener('submit', function(e) {
+    loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        const email = this.username.value;
+        setLoadingState(this, true);
+        
+        const identifier = this.username.value;
         const password = this.password.value;
 
-        // Get users from localStorage
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const user = users.find(u => u.email === email && u.password === password);
+        try {
+            const response = await fetch('http://192.168.100.9:1337/api/auth/local', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    identifier: identifier,
+                    password: password
+                })
+            });
 
-        if (user) {
-            const token = generateToken(user);
-            localStorage.setItem('authToken', token);
-            localStorage.setItem('currentUser', JSON.stringify(user));
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error?.message || 'Login failed');
+            }
+
+            // Store the JWT token in localStorage
+            localStorage.setItem('authToken', data.jwt);
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
+            
             showSuccess('Login successful!');
             console.log('Logged in successfully!');
-        } else {
-            showError(this.username, 'Invalid email or password');
+            
+            // Redirect to dashboard or home page here if needed
+            // window.location.href = '/dashboard';
+            
+        } catch (error) {
+            showError(this.username, error.message);
+            console.error('Login error:', error);
+        } finally {
+            setLoadingState(this, false);
         }
     });
 
@@ -175,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.textContent = 'Loading...';
         } else {
             submitButton.disabled = false;
-            submitButton.textContent = 'Sign Up';
+            submitButton.textContent = form.id === 'login-form' ? 'Login' : 'Sign Up';
         }
     }
 
