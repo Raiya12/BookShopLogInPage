@@ -103,8 +103,8 @@ document.addEventListener('DOMContentLoaded', function() {
             showSuccess('Login successful!');
             console.log('Logged in successfully!');
             
-            // Redirect to dashboard or home page here if needed
-            // window.location.href = '/dashboard';
+            // Redirect to dashboard
+            window.location.href = 'index.html';
             
         } catch (error) {
             showError(this.username, error.message);
