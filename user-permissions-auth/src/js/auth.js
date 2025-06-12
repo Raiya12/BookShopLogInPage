@@ -69,41 +69,46 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Signup form handler
-    signupForm.addEventListener('submit', function(e) {
+    signupForm.addEventListener('submit', async function(e) {
         e.preventDefault();
+        setLoadingState(this, true);
+        
         const name = this.name.value;
         const email = this.email.value;
         const password = this.password.value;
 
-        // Get existing users
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        try {
+            const response = await fetch('http://192.168.100.9:1337/api/auth/local/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: name,
+                    email: email,
+                    password: password
+                })
+            });
 
-        // Check if user already exists
-        if (users.some(user => user.email === email)) {
-            showError(this.email, 'Email already registered');
-            return;
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error?.message || 'Registration failed');
+            }
+
+            // Store the JWT token in localStorage
+            localStorage.setItem('authToken', data.jwt);
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
+
+            showSuccess('Registration successful!');
+            showSection('login-section');
+            
+        } catch (error) {
+            showError(this.email, error.message);
+            console.error('Registration error:', error);
+        } finally {
+            setLoadingState(this, false);
         }
-
-        // Create new user
-        const newUser = {
-            id: generateUserId(),
-            name,
-            email,
-            password,
-            createdAt: new Date().toISOString()
-        };
-
-        // Save user
-        users.push(newUser);
-        localStorage.setItem('users', JSON.stringify(users));
-
-        // Generate token
-        const token = generateToken(newUser);
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('currentUser', JSON.stringify(newUser));
-
-        showSuccess('Registration successful!');
-        showSection('login-section');
     });
 
     // Helper functions
@@ -161,6 +166,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         `;
         document.head.appendChild(style);
+    }
+
+    function setLoadingState(form, isLoading) {
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (isLoading) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Loading...';
+        } else {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Sign Up';
+        }
     }
 
     // Initialize
