@@ -47,6 +47,17 @@ document.addEventListener('DOMContentLoaded', function() {
         showSection('login-section');
     });
 
+    // Add this with your other event listeners
+    document.getElementById('show-reset').addEventListener('click', (e) => {
+        e.preventDefault();
+        showSection('reset-section');
+    });
+
+    document.getElementById('back-to-login').addEventListener('click', (e) => {
+        e.preventDefault();
+        showSection('login-section');
+    });
+
     // Password toggle functionality
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {
@@ -144,6 +155,28 @@ document.addEventListener('DOMContentLoaded', function() {
         } finally {
             setLoadingState(this, false);
         }
+    });
+
+    // Social login handlers
+    const googleLogin = document.querySelector('.google-login');
+    const facebookLogin = document.querySelector('.facebook-login');
+    const twitterLogin = document.querySelector('.twitter-login');
+    const githubLogin = document.querySelector('.github-login');
+
+    googleLogin.addEventListener('click', () => {
+        window.location.href = 'https://accounts.google.com/signin';
+    });
+
+    facebookLogin.addEventListener('click', () => {
+        window.location.href = 'https://www.facebook.com/login';
+    });
+
+    twitterLogin.addEventListener('click', () => {
+        window.location.href = 'https://twitter.com/login';
+    });
+
+    githubLogin.addEventListener('click', () => {
+        window.location.href = 'https://github.com/login';
     });
 
     // Helper functions
